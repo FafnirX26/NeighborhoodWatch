@@ -15,7 +15,8 @@ def format_crime_data(s):
          'Date': parts[parts.index('Start_Date_Time')+1],
          'Time': parts[parts.index('Start_Date_Time')+2],
          'Victim #': parts[parts.index('Victims')+1],
-         'Crime': parts[parts.index('Crime')+2]+' '+parts[parts.index('Crime')+3]+' '+parts[parts.index('Crime')+4],
+         'Category': ' '.join(parts[parts.index('Name2') + 1 : parts.index('Name3')]),
+         'Crime': ' '.join(parts[parts.index('Name3') + 1 : parts.index('City')]),
          'City': parts[parts.index('City')+1]}
     formatted_string = ""
     for key, value in d.items():
@@ -44,7 +45,7 @@ for lat, long in tqdm(zip(lats[0:num_of_points], longs[0:num_of_points])):
     crime_data = df[df['Location'] == f'({lat}, {long})']
     folium.Marker(location=[lat, long],
                   icon=folium.Icon(color='red'),
-                  popup=folium.Popup(format_crime_data(str(crime_data.iloc[0])), min_width=120, max_width=120)
+                  popup=folium.Popup(format_crime_data(str(crime_data.iloc[0])), min_width=120, max_width=160)
                   ).add_to(base_map)
 
 base_map.save("basemap.html")
