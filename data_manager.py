@@ -2,7 +2,9 @@
 import pandas as pd
 import requests
 from tqdm import tqdm
+import warnings
 
+warnings.filterwarnings("ignore") # lets not scare the user with random pandas warnings
 
 def data(u):
     # cut out some columns from the data that won't be useful to us
@@ -10,7 +12,7 @@ def data(u):
         update()  # calls update function for latest file
 
     df = pd.read_csv("Crime.csv")
-    df = df[['Incident ID', 'Start_Date_Time', 'End_Date_Time', 'Victims', 'Crime Name1', 'City', 'State', 'Zip Code',
+    df = df[['Incident ID', 'Start_Date_Time', 'End_Date_Time', 'Victims', 'Crime Name2', 'Crime Name3', 'City', 'State', 'Zip Code',
              'Street Name', 'Location']]
     df['Start_Date_Time'] = pd.to_datetime(df['Start_Date_Time'], format='%m/%d/%Y %I:%M:%S %p')
     df['End_Date_Time'] = pd.to_datetime(df['End_Date_Time'], format='%m/%d/%Y %I:%M:%S %p')
