@@ -1,4 +1,4 @@
-# NeighborhoodGuard
+# NeighborhoodWatch
 Program using Montgomery County, MD crime data to provide a neat visualization through Folium. 
 
 Program downloads "Crime.csv" to local device through this link: https://data.montgomerycountymd.gov/api/views/icn6-v9z3/rows.csv?accessType=DOWNLOAD
