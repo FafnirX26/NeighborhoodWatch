@@ -17,10 +17,8 @@ CRIME_COLORS = {
     'property': 'beige'
 }
 
-
 def format_crime_data(s):
     parts = s.split()
-    # print(parts) # for debugging indices in this function
     lat = float(parts[parts.index('Location') + 1][1:len(parts[parts.index('Location') + 1])-1])
     long = float(parts[parts.index('Location') + 2][0:len(parts[parts.index('Location') + 2])-1])
 
@@ -41,10 +39,19 @@ def format_crime_data(s):
 
     return formatted_string
 
+# Opt for heatmap
+show_heatmap = input("Would you like to display the heatmap? [Y/n]: ").lower() == 'y'
+
+# Filter by crime type
+selected_types = input("Enter crime types to filter (comma-separated, leave blank for all): ").strip().lower().split(',')
+
+if selected_types != ['']:
+    df = df[df['Crime Name3'].str.lower().apply(lambda x: any(ct in x for ct in selected_types))]
 
 # initiate app
 print("Thank you for using NeighborhoodWatch!")
-num_of_points = int(input("Enter amount of crimes to view (from latest): "))
+num_of_points = int(input("Enter the number of crimes to view (from latest): "))
+
 lats = []
 longs = []
 
@@ -56,14 +63,17 @@ for loc in df['Location']:
     if long < 0:
         longs.append(long)
 
+if len(lats) == 0 or len(longs) == 0:
+    print("No crimes match the selected criteria. Exiting.")
+    exit()
+
 # Create the base map
 base_map = folium.Map(tiles='OpenStreetMap', location=(sum(lats) / len(lats), sum(longs) / len(longs)), zoom_start=12, prefer_canvas=True)
 
-# Prepare heatmap data
-heat_data = [[lat, long] for lat, long in zip(lats, longs)]
-
-# Add the heatmap layer
-HeatMap(heat_data).add_to(base_map)
+# Add the heatmap layer if opted in
+if show_heatmap:
+    heat_data = [[lat, long] for lat, long in zip(lats, longs)]
+    HeatMap(heat_data).add_to(base_map)
 
 # Add markers for individual crimes
 for lat, long in tqdm(zip(lats[0:num_of_points], longs[0:num_of_points])):
@@ -79,7 +89,6 @@ for lat, long in tqdm(zip(lats[0:num_of_points], longs[0:num_of_points])):
         icon=folium.Icon(color=color),
         popup=folium.Popup(format_crime_data(str(crime_data)), min_width=120, max_width=160)
     ).add_to(base_map)
-
 
 # Save and display the map
 base_map.save("basemap.html")
