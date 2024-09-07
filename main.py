@@ -7,6 +7,17 @@ import webbrowser
 u = input("Before we get started, would you like to update the database (not necessary if you did recently) [Y/n]: ")
 df = data_manager.data(u)  # uses data manager module to load data
 
+CRIME_COLORS = {
+    'assault': 'red',
+    'burglary': 'blue',
+    'theft': 'green',
+    'larceny': 'green',
+    'vandalism': 'purple',
+    'drug': 'orange',
+    'property': 'beige'
+}
+
+
 def format_crime_data(s):
     parts = s.split()
     # print(parts) # for debugging indices in this function
@@ -56,11 +67,19 @@ HeatMap(heat_data).add_to(base_map)
 
 # Add markers for individual crimes
 for lat, long in tqdm(zip(lats[0:num_of_points], longs[0:num_of_points])):
-    crime_data = df[df['Location'] == f'({lat}, {long})']
-    folium.Marker(location=[lat, long],
-                  icon=folium.Icon(color='red'),
-                  popup=folium.Popup(format_crime_data(str(crime_data.iloc[0])), min_width=120, max_width=160)
-                  ).add_to(base_map)
+    crime_data = df[df['Location'] == f'({lat}, {long})'].iloc[0]
+    crime_type = crime_data['Crime Name3']
+    color = 'gray'
+    for cat in CRIME_COLORS:
+        if cat in crime_type.lower():
+            color = CRIME_COLORS[cat]
+
+    folium.Marker(
+        location=[lat, long],
+        icon=folium.Icon(color=color),
+        popup=folium.Popup(format_crime_data(str(crime_data)), min_width=120, max_width=160)
+    ).add_to(base_map)
+
 
 # Save and display the map
 base_map.save("basemap.html")
