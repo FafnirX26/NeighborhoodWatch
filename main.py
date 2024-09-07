@@ -1,20 +1,25 @@
 import data_manager
 import folium
 from folium.plugins import HeatMap
-from tqdm import tqdm
 import webbrowser
 import tkinter as tk
-from tkinter import messagebox, simpledialog
-
+from tkinter import messagebox, ttk
 
 def start_app():
     def on_submit():
         u = update_db.get()
-        show_heatmap_option = show_heatmap.get()
+        show_heatmap_option = show_heatmap.get().lower() == 'y'
         crime_types = crime_type_entry.get().strip().lower().split(',')
         num_points = int(num_crimes_entry.get())
 
+        # Show progress bar for data loading
+        progress_bar["value"] = 0
+        status_label.config(text="Loading data...")
+        root.update_idletasks()
+
         df = data_manager.data(u)  # uses data manager module to load data
+        progress_bar["value"] = 50  # Update progress bar
+        root.update_idletasks()
 
         CRIME_COLORS = {
             'assault': 'red',
@@ -66,6 +71,9 @@ def start_app():
             messagebox.showwarning("No Data", "No crimes match the selected criteria.")
             return
 
+        progress_bar["value"] = 75  # Update progress bar
+        root.update_idletasks()
+
         # Create the base map
         base_map = folium.Map(tiles='OpenStreetMap', location=(sum(lats) / len(lats), sum(longs) / len(longs)),
                               zoom_start=12, prefer_canvas=True)
@@ -76,7 +84,7 @@ def start_app():
             HeatMap(heat_data).add_to(base_map)
 
         # Add markers for individual crimes
-        for lat, long in tqdm(zip(lats[0:num_points], longs[0:num_points])):
+        for i, (lat, long) in enumerate(zip(lats[0:num_points], longs[0:num_points])):
             crime_data = df[df['Location'] == f'({lat}, {long})'].iloc[0]
             crime_type = crime_data['Crime Name3']
             color = 'gray'
@@ -90,9 +98,15 @@ def start_app():
                 popup=folium.Popup(format_crime_data(str(crime_data)), min_width=120, max_width=160)
             ).add_to(base_map)
 
+            # Update progress bar during map generation
+            progress = 75 + (i + 1) / num_points * 25
+            progress_bar["value"] = progress
+            root.update_idletasks()
+
         # Save and display the map
         base_map.save("basemap.html")
         webbrowser.open("basemap.html")
+        status_label.config(text="Map generated!")
         root.destroy()
 
     # Initialize the main Tkinter window
@@ -122,9 +136,14 @@ def start_app():
     submit_button = tk.Button(root, text="Generate Map", command=on_submit)
     submit_button.grid(row=4, column=0, columnspan=2, pady=20)
 
+    # Create a progress bar and status label
+    progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+    progress_bar.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+    status_label = tk.Label(root, text="")
+    status_label.grid(row=6, column=0, columnspan=2)
+
     # Run the Tkinter main loop
     root.mainloop()
-
 
 if __name__ == "__main__":
     start_app()
