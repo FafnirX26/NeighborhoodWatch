@@ -46,7 +46,7 @@ show_heatmap = input("Would you like to display the heatmap? [Y/n]: ").lower() =
 selected_types = input("Enter crime types to filter (comma-separated, leave blank for all): ").strip().lower().split(',')
 
 if selected_types != ['']:
-    df = df[df['Crime Name3'].str.lower().apply(lambda x: any(ct in x for ct in selected_types))]
+    df = df[df['Crime Name3'].str.lower().apply(lambda x: any(ct.strip() in x for ct in selected_types))]
 
 # initiate app
 print("Thank you for using NeighborhoodWatch!")
