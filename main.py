@@ -4,10 +4,11 @@ from tqdm import tqdm
 import warnings
 import folium
 from folium.plugins import HeatMap
-import webbrowser
 import tkinter as tk
 from tkinter import messagebox, ttk
 from threading import Thread
+import os
+from geopy.geocoders import Nominatim
 
 warnings.filterwarnings("ignore")  # Ignore pandas warnings for a cleaner user experience
 
@@ -56,7 +57,8 @@ def start_app():
         u = update_db.get()
         show_heatmap_option = show_heatmap.get().lower() == 'y'
         crime_types = crime_type_entry.get().strip().lower().split(',')
-        num_points = int(num_crimes_entry.get())
+        num_points = int(num_crimes_entry.get())+1
+        address = address_entry.get().strip()
 
         def update_data_progress():
             # Simulate loading data with a secondary thread and updating the progress bar
@@ -68,12 +70,12 @@ def start_app():
             root.update_idletasks()
 
             # Proceed with map generation
-            generate_map(df, show_heatmap_option, crime_types, num_points)
+            generate_map(df, show_heatmap_option, crime_types, num_points, address)
 
         # Start the data loading process in a separate thread
         Thread(target=update_data_progress).start()
 
-    def generate_map(df, show_heatmap_option, crime_types, num_points):
+    def generate_map(df, show_heatmap_option, crime_types, num_points, address):
         CRIME_COLORS = {
             'assault': 'red',
             'burglary': 'blue',
@@ -124,8 +126,18 @@ def start_app():
             messagebox.showwarning("No Data", "No crimes match the selected criteria.")
             return
 
-        # Create the base map
-        base_map = folium.Map(tiles='OpenStreetMap', location=(sum(lats) / len(lats), sum(longs) / len(longs)),
+        # Use geopy to geocode the address into lat, long
+        geolocator = Nominatim(user_agent="crime_mapper")
+        location = geolocator.geocode(address)
+        if location:
+            center_lat, center_long = location.latitude, location.longitude
+        else:
+            # If the address is invalid, default to the average lat/long of the crimes
+            center_lat, center_long = sum(lats) / len(lats), sum(longs) / len(longs)
+            messagebox.showerror("Invalid Address", "Address not found. Centering on average crime location.")
+
+        # Create the base map centered on the address if valid, or the average of crime locations if not
+        base_map = folium.Map(tiles='OpenStreetMap', location=(center_lat, center_long),
                               zoom_start=12, prefer_canvas=True)
 
         progress_bar_map["value"] = 0
@@ -158,9 +170,9 @@ def start_app():
 
         # Save and display the map
         base_map.save("basemap.html")
-        webbrowser.open("basemap.html")
+        os.system("open basemap.html")
         status_label_map.config(text="Map generated!")
-        root.destroy()
+        root.quit()
 
     # Initialize the main Tkinter window
     root = tk.Tk()
@@ -184,23 +196,26 @@ def start_app():
     tk.Label(root, text="Number of Crimes to View:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
     num_crimes_entry = tk.Entry(root)
     num_crimes_entry.grid(row=3, column=1, padx=10, pady=5)
-    num_crimes_entry.insert(0, "100")
+    num_crimes_entry.insert(0, "500")
 
-    submit_button = tk.Button(root, text="Generate Map", command=on_submit)
-    submit_button.grid(row=4, column=0, columnspan=2, pady=20)
+    tk.Label(root, text="Center Map on Address:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+    address_entry = tk.Entry(root)
+    address_entry.grid(row=4, column=1, padx=10, pady=5)
 
-    # Create progress bars and status labels
-    progress_bar_data = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
-    progress_bar_data.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+    submit_button = ttk.Button(root, text="Submit", command=on_submit)
+    submit_button.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+
+    # Add progress bars for data loading and map generation
+    progress_bar_data = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=300)
+    progress_bar_data.grid(row=6, column=0, columnspan=2, padx=10, pady=5)
     status_label_data = tk.Label(root, text="")
-    status_label_data.grid(row=6, column=0, columnspan=2)
+    status_label_data.grid(row=7, column=0, columnspan=2, padx=10, pady=5)
 
-    progress_bar_map = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
-    progress_bar_map.grid(row=7, column=0, columnspan=2, padx=10, pady=10)
+    progress_bar_map = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=300)
+    progress_bar_map.grid(row=8, column=0, columnspan=2, padx=10, pady=5)
     status_label_map = tk.Label(root, text="")
-    status_label_map.grid(row=8, column=0, columnspan=2)
+    status_label_map.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
 
-    # Run the Tkinter main loop
     root.mainloop()
 
 
