@@ -9,6 +9,7 @@ from tkinter import messagebox, ttk
 from threading import Thread
 import os
 from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
 
 warnings.filterwarnings("ignore")  # Ignore pandas warnings for a cleaner user experience
 
@@ -21,8 +22,7 @@ def data(u):
     df = pd.read_csv("Crime.csv")
     df = df[
         ['Incident ID', 'Start_Date_Time', 'End_Date_Time', 'Victims', 'Crime Name2', 'Crime Name3', 'City', 'State',
-         'Zip Code',
-         'Street Name', 'Location']]
+         'Zip Code', 'Street Name', 'Location']]
     df['Start_Date_Time'] = pd.to_datetime(df['Start_Date_Time'], format='%m/%d/%Y %I:%M:%S %p')
     df['End_Date_Time'] = pd.to_datetime(df['End_Date_Time'], format='%m/%d/%Y %I:%M:%S %p')
     df = df.sort_values('Start_Date_Time', ascending=False)
@@ -59,6 +59,7 @@ def start_app():
         crime_types = crime_type_entry.get().strip().lower().split(',')
         num_points = int(num_crimes_entry.get()) + 1
         address = address_entry.get().strip()
+        range_miles = float(range_entry.get().strip())
 
         def update_data_progress():
             # Simulate loading data with a secondary thread and updating the progress bar
@@ -70,12 +71,12 @@ def start_app():
             root.update_idletasks()
 
             # Proceed with map generation
-            generate_map(df, show_heatmap_option, crime_types, num_points, address)
+            generate_map(df, show_heatmap_option, crime_types, num_points, address, range_miles)
 
         # Start the data loading process in a separate thread
         Thread(target=update_data_progress).start()
 
-    def generate_map(df, show_heatmap_option, crime_types, num_points, address):
+    def generate_map(df, show_heatmap_option, crime_types, num_points, address, range_miles):
         CRIME_COLORS = {
             'assault': 'red',
             'burglary': 'blue',
@@ -136,38 +137,44 @@ def start_app():
             center_lat, center_long = sum(lats) / len(lats), sum(longs) / len(longs)
             messagebox.showerror("Invalid Address", "Address not found. Centering on average crime location.")
 
+        # Filter crimes based on the range from the provided address
+        filtered_lats = []
+        filtered_longs = []
+        for lat, long in zip(lats, longs):
+            if geodesic((center_lat, center_long), (lat, long)).miles <= range_miles:
+                filtered_lats.append(lat)
+                filtered_longs.append(long)
+
+        if len(filtered_lats) == 0 or len(filtered_longs) == 0:
+            messagebox.showwarning("No Data", "No crimes found within the specified range.")
+            return
+
         # Create the base map centered on the address if valid, or the average of crime locations if not
         base_map = folium.Map(tiles='OpenStreetMap', location=(center_lat, center_long),
-                              zoom_start=12, prefer_canvas=True)
+                              zoom_start=17, prefer_canvas=True)
 
         progress_bar_map["value"] = 0
         status_label_map.config(text="Generating map...")
 
         # Add the heatmap layer if opted in
         if show_heatmap_option:
-            heat_data = [[lat, long] for lat, long in zip(lats, longs)]
+            heat_data = [[lat, long] for lat, long in zip(filtered_lats, filtered_longs)]
             HeatMap(heat_data).add_to(base_map)
 
-        if radius_entry.get() == '':
-            radius = 1000
-        else:
-            radius = float(radius_entry.get())
         # Add markers for individual crimes
-        for i, (lat, long) in enumerate(zip(lats[0:num_points], longs[0:num_points])):
-            if (location.latitude + radius / 111 > lat > location.latitude - radius / 111) and (
-                    location.longitude + radius / 111 > long > location.longitude - radius / 111):
-                crime_data = df[df['Location'] == f'({lat}, {long})'].iloc[0]
-                crime_type = crime_data['Crime Name3']
-                color = 'gray'
-                for cat in CRIME_COLORS:
-                    if cat in crime_type.lower():
-                        color = CRIME_COLORS[cat]
+        for i, (lat, long) in enumerate(zip(filtered_lats[0:num_points], filtered_longs[0:num_points])):
+            crime_data = df[df['Location'] == f'({lat}, {long})'].iloc[0]
+            crime_type = crime_data['Crime Name3']
+            color = 'gray'
+            for cat in CRIME_COLORS:
+                if cat in crime_type.lower():
+                    color = CRIME_COLORS[cat]
 
-                folium.Marker(
-                    location=[lat, long],
-                    icon=folium.Icon(color=color),
-                    popup=folium.Popup(format_crime_data(str(crime_data)), min_width=120, max_width=160)
-                ).add_to(base_map)
+            folium.Marker(
+                location=[lat, long],
+                icon=folium.Icon(color=color),
+                popup=folium.Popup(format_crime_data(str(crime_data)), min_width=120, max_width=160)
+            ).add_to(base_map)
 
             # Update progress bar during map generation
             progress = (i + 1) / num_points * 100
@@ -198,34 +205,40 @@ def start_app():
     tk.Label(root, text="Crime Types to Filter (comma-separated):").grid(row=2, column=0, padx=10, pady=5, sticky="w")
     crime_type_entry = tk.Entry(root)
     crime_type_entry.grid(row=2, column=1, padx=10, pady=5)
+    crime_type_entry.insert(0, "")
 
-    tk.Label(root, text="Number of Crimes to View:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
+    tk.Label(root, text="Number of Crimes to Show:").grid(row=3, column=0, padx=10, pady=5, sticky="w")
     num_crimes_entry = tk.Entry(root)
     num_crimes_entry.grid(row=3, column=1, padx=10, pady=5)
-    num_crimes_entry.insert(0, "500")
+    num_crimes_entry.insert(0, "100")
 
-    tk.Label(root, text="Center Map on Address:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+    tk.Label(root, text="Center Address:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
     address_entry = tk.Entry(root)
     address_entry.grid(row=4, column=1, padx=10, pady=5)
+    address_entry.insert(0, "Address")
 
-    tk.Label(root, text="Range (km):").grid(row=5, column=0, padx=10, pady=5, sticky="w")
-    radius_entry = tk.Entry(root)
-    radius_entry.grid(row=5, column=1, padx=10, pady=5)
+    tk.Label(root, text="Range in Miles:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
+    range_entry = tk.Entry(root)
+    range_entry.grid(row=5, column=1, padx=10, pady=5)
+    range_entry.insert(0, "5")  # Default to 5 miles
 
-    submit_button = ttk.Button(root, text="Submit", command=on_submit)
+    submit_button = tk.Button(root, text="Submit", command=on_submit)
     submit_button.grid(row=6, column=0, columnspan=2, padx=10, pady=10)
 
-    # Add progress bars for data loading and map generation
-    progress_bar_data = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=300)
+    # Progress bars for data loading and map generation
+    progress_bar_data = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=280)
     progress_bar_data.grid(row=7, column=0, columnspan=2, padx=10, pady=5)
+
     status_label_data = tk.Label(root, text="")
-    status_label_data.grid(row=8, column=0, columnspan=2, padx=10, pady=5)
+    status_label_data.grid(row=8, column=0, columnspan=2)
 
-    progress_bar_map = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=300)
+    progress_bar_map = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=280)
     progress_bar_map.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
-    status_label_map = tk.Label(root, text="")
-    status_label_map.grid(row=10, column=0, columnspan=2, padx=10, pady=5)
 
+    status_label_map = tk.Label(root, text="")
+    status_label_map.grid(row=10, column=0, columnspan=2)
+
+    # Start the Tkinter event loop
     root.mainloop()
 
 
