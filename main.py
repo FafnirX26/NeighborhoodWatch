@@ -57,7 +57,7 @@ def start_app():
         u = update_db.get()
         show_heatmap_option = show_heatmap.get().lower() == 'y'
         crime_types = crime_type_entry.get().strip().lower().split(',')
-        num_points = int(num_crimes_entry.get())+1
+        num_points = int(num_crimes_entry.get()) + 1
         address = address_entry.get().strip()
 
         def update_data_progress():
@@ -148,20 +148,26 @@ def start_app():
             heat_data = [[lat, long] for lat, long in zip(lats, longs)]
             HeatMap(heat_data).add_to(base_map)
 
+        if radius_entry.get() == '':
+            radius = 1000
+        else:
+            radius = float(radius_entry.get())
         # Add markers for individual crimes
         for i, (lat, long) in enumerate(zip(lats[0:num_points], longs[0:num_points])):
-            crime_data = df[df['Location'] == f'({lat}, {long})'].iloc[0]
-            crime_type = crime_data['Crime Name3']
-            color = 'gray'
-            for cat in CRIME_COLORS:
-                if cat in crime_type.lower():
-                    color = CRIME_COLORS[cat]
+            if (location.latitude + radius / 111 > lat > location.latitude - radius / 111) and (
+                    location.longitude + radius / 111 > long > location.longitude - radius / 111):
+                crime_data = df[df['Location'] == f'({lat}, {long})'].iloc[0]
+                crime_type = crime_data['Crime Name3']
+                color = 'gray'
+                for cat in CRIME_COLORS:
+                    if cat in crime_type.lower():
+                        color = CRIME_COLORS[cat]
 
-            folium.Marker(
-                location=[lat, long],
-                icon=folium.Icon(color=color),
-                popup=folium.Popup(format_crime_data(str(crime_data)), min_width=120, max_width=160)
-            ).add_to(base_map)
+                folium.Marker(
+                    location=[lat, long],
+                    icon=folium.Icon(color=color),
+                    popup=folium.Popup(format_crime_data(str(crime_data)), min_width=120, max_width=160)
+                ).add_to(base_map)
 
             # Update progress bar during map generation
             progress = (i + 1) / num_points * 100
@@ -202,19 +208,23 @@ def start_app():
     address_entry = tk.Entry(root)
     address_entry.grid(row=4, column=1, padx=10, pady=5)
 
+    tk.Label(root, text="Range (km):").grid(row=5, column=0, padx=10, pady=5, sticky="w")
+    radius_entry = tk.Entry(root)
+    radius_entry.grid(row=5, column=1, padx=10, pady=5)
+
     submit_button = ttk.Button(root, text="Submit", command=on_submit)
-    submit_button.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+    submit_button.grid(row=6, column=0, columnspan=2, padx=10, pady=10)
 
     # Add progress bars for data loading and map generation
     progress_bar_data = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=300)
-    progress_bar_data.grid(row=6, column=0, columnspan=2, padx=10, pady=5)
+    progress_bar_data.grid(row=7, column=0, columnspan=2, padx=10, pady=5)
     status_label_data = tk.Label(root, text="")
-    status_label_data.grid(row=7, column=0, columnspan=2, padx=10, pady=5)
+    status_label_data.grid(row=8, column=0, columnspan=2, padx=10, pady=5)
 
     progress_bar_map = ttk.Progressbar(root, orient="horizontal", mode="determinate", length=300)
-    progress_bar_map.grid(row=8, column=0, columnspan=2, padx=10, pady=5)
+    progress_bar_map.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
     status_label_map = tk.Label(root, text="")
-    status_label_map.grid(row=9, column=0, columnspan=2, padx=10, pady=5)
+    status_label_map.grid(row=10, column=0, columnspan=2, padx=10, pady=5)
 
     root.mainloop()
 
