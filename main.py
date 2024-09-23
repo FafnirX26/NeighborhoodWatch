@@ -5,7 +5,7 @@ import warnings
 import folium
 from folium.plugins import HeatMap
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, PhotoImage
 from threading import Thread
 import os
 from geopy.geocoders import Nominatim
@@ -190,6 +190,8 @@ def start_app():
     # Initialize the main Tkinter window
     root = tk.Tk()
     root.title("NeighborhoodWatch Configuration")
+    root.geometry("500x400")
+    root.resizable(False, False)
 
     # Create and place the GUI elements
     tk.Label(root, text="Update Database [y/n]:").grid(row=0, column=0, padx=10, pady=5, sticky="w")
@@ -215,7 +217,7 @@ def start_app():
     tk.Label(root, text="Center Address:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
     address_entry = tk.Entry(root)
     address_entry.grid(row=4, column=1, padx=10, pady=5)
-    address_entry.insert(0, "Address")
+    address_entry.insert(0, "")
 
     tk.Label(root, text="Range in Miles:").grid(row=5, column=0, padx=10, pady=5, sticky="w")
     range_entry = tk.Entry(root)
@@ -237,6 +239,10 @@ def start_app():
 
     status_label_map = tk.Label(root, text="")
     status_label_map.grid(row=10, column=0, columnspan=2)
+
+    # icon photo
+    icon = PhotoImage(file="icon.png")
+    root.iconphoto(False, icon)
 
     # Start the Tkinter event loop
     root.mainloop()
