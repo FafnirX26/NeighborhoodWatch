@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neighborhood Watch Configuration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Neighborhood Watch Configuration</h1>
+    <form method="POST">
+        <label for="update_db">Update Database</label>
+        <select name="update_db" id="update_db">
+            <option value="n">No</option>
+            <option value="y">Yes</option>
+        </select><br><br>
+
+        <label for="show_heatmap">Show Heatmap</label>
+        <select name="show_heatmap" id="show_heatmap">
+            <option value="n">No</option>
+            <option value="y">Yes</option>
+        </select><br><br>
+
+        <label for="crime_types">Crime Types to Filter (comma-separated)</label>
+        <input type="text" name="crime_types" id="crime_types" placeholder="e.g., theft, assault"><br><br>
+
+        <label for="num_points">Number of Crimes to Show</label>
+        <input type="number" name="num_points" id="num_points" value="100"><br><br>
+
+        <label for="address">Center Address</label>
+        <input type="text" name="address" id="address" placeholder="Enter address"><br><br>
+
+        <label for="range_miles">Range in Miles</label>
+        <input type="number" name="range_miles" id="range_miles" value="5"><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
