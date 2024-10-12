@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for
 import pandas as pd
 import requests
 from tqdm import tqdm
-import os
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import folium
@@ -25,6 +24,11 @@ def update():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+
+        show_map = request.form.get("map")
+
+        if show_map:
+            redirect('/map')
         update_db = request.form.get('update_db', 'n')
         if update_db.lower() == 'y':
             update()  # Update the Crime.csv if the user chooses to
@@ -32,7 +36,7 @@ def index():
         # Get other form inputs
         show_heatmap = request.form.get('show_heatmap', 'y')
         crime_types = request.form.get('crime_types', '').strip().lower().split(',')
-        num_points = int(request.form.get('num_points', 100)) + 1
+        num_points = int(request.form.get('num_points', 100))
         address = request.form.get('address', '').strip()
         range_miles = float(request.form.get('range_miles', 5).strip())
 
@@ -90,7 +94,7 @@ def generate_map(df, show_heatmap_option, crime_types, num_points, address, rang
             filtered_longs.append(long)
 
     # Create base map
-    base_map = folium.Map(location=(center_lat, center_long), zoom_start=14)
+    base_map = folium.Map(location=(center_lat, center_long), zoom_start=16)
 
     if show_heatmap_option:
         heat_data = [[lat, long] for lat, long in zip(filtered_lats, filtered_longs)]
