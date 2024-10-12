@@ -1,4 +1,4 @@
-# Crime Mapping App for Montgomery County  
+# NeighborhoodWatch for Montgomery County  
 An interactive web app built using Flask and Folium to visualize crime incidents in Montgomery County, Maryland. This project aims to provide residents, law enforcement, and policymakers with an easy-to-use tool to explore and analyze crime data trends across the region.
 
 ---
