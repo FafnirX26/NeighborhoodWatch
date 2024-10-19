@@ -65,7 +65,8 @@ An interactive web app built using Flask and Folium to visualize crime incidents
 - **Flask**: Lightweight web framework for backend development.  
 - **Folium**: Library for creating interactive maps.  
 - **pandas**: Data manipulation and filtering.  
-- **Google Maps API**: Integrating Street View functionality.  
+- **Google Maps API**: Integrating Street View functionality.
+- **geopy**: Distance calculation from a point on a map.
 
 ---
 
