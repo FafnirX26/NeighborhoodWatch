@@ -27,7 +27,7 @@ An interactive web app built using Flask and Folium to visualize crime incidents
 
 1. **Clone the repository:**  
    ```bash
-   git clone https://github.com/your-username/crime-mapping-app.git
+   git clone https://github.com/FafnirX26/crime-mapping-app.git
    cd crime-mapping-app
    ```  
 
