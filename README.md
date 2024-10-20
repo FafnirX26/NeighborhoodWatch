@@ -24,27 +24,26 @@ An interactive web app built using Flask and Folium to visualize crime incidents
 ---
 
 ## Installation  
-1. **Install Python if you haven't already:**
-   [Download Python](https://www.python.org/downloads/)
+1. **[Install Python if you haven't already](https://www.python.org/downloads/)**
    
-3. **Clone the repository:**  
+2. **Clone the repository:**  
    ```bash
    git clone [https://github.com/FafnirX26/NeighborhoodWatch.git](https://github.com/FafnirX26/NeighborhoodWatch.git)
    cd NeighborhoodWatch
    ```  
 
-4. **Create a virtual environment (optional but recommended):**  
+3. **Create a virtual environment (optional but recommended):**  
    ```bash
    python3 -m venv venv  
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-5. **Install the dependencies:**
+4. **Install the dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
    
-6. **Run the app:**  
+5. **Run the app:**  
    ```bash
    python main.py
    ```  
