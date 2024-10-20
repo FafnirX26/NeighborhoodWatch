@@ -28,7 +28,7 @@ An interactive web app built using Flask and Folium to visualize crime incidents
    
 2. **Clone the repository:**  
    ```bash
-   git clone [https://github.com/FafnirX26/NeighborhoodWatch.git](https://github.com/FafnirX26/NeighborhoodWatch.git)
+   git clone https://github.com/FafnirX26/NeighborhoodWatch.git
    cd NeighborhoodWatch
    ```  
 
