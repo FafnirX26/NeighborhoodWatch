@@ -36,8 +36,13 @@ An interactive web app built using Flask and Folium to visualize crime incidents
    python3 -m venv venv  
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
+
+3. **Install the dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
    
-3. **Run the app:**  
+4. **Run the app:**  
    ```bash
    python app.py
    ```  
