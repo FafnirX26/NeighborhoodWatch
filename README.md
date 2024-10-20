@@ -40,6 +40,7 @@ An interactive web app built using Flask and Folium to visualize crime incidents
 
 4. **Install the dependencies:**
    ```bash
+   pip install --upgrade pip setuptools wheel
    pip install -r requirements.txt
    ```
    
