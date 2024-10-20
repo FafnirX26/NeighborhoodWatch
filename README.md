@@ -44,7 +44,7 @@ An interactive web app built using Flask and Folium to visualize crime incidents
    
 4. **Run the app:**  
    ```bash
-   python app.py
+   python main.py
    ```  
    The app will be available at `http://127.0.0.1:5000`.  
 
